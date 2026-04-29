@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.jpg";
 
-const WHATSAPP = "https://wa.me/919999999999?text=Hi%20CA%20Praveen%2C%20I%20just%20submitted%20my%20ITR%20request";
+const WHATSAPP = "https://wa.me/918169887643?text=Hi%20CA%20Praveen%2C%20I%20just%20submitted%20my%20ITR%20request";
 
 const ThankYou = () => {
   return (
