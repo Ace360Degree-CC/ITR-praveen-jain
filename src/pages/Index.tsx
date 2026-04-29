@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Phone, MessageCircle, CheckCircle2, AlertTriangle, Clock, FileText, Shield, Star, Zap, X, Menu } from "lucide-react";
+import { Phone, MessageCircle, CheckCircle2, AlertTriangle, Clock, FileText, Shield, Star, Zap, Play, X, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,8 +10,11 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import logo from "@/assets/logo.jpg";
 import praveen from "@/assets/praveen.png";
+import { ScrollToTopButton } from "@/components/ui/ScrollToTopButton";
 
-const WHATSAPP = "https://wa.me/919999999999?text=Hi%20CA%20Praveen%2C%20I%20need%20help%20filing%20my%20ITR";
+const WHATSAPP = "https://wa.me/918169887643?text=Hi%20CA%20Praveen%2C%20I%20need%20help%20filing%20my%20ITR";
+
+const LEAD_FORM_ENDPOINT = "https://formsubmit.co/ajax/pravreena2026@gmail.com";
 
 const QuickForm = ({ variant = "hero", onSubmitted }: { variant?: "hero" | "footer" | "exit"; onSubmitted?: () => void }) => {
   const navigate = useNavigate();
@@ -23,18 +26,58 @@ const QuickForm = ({ variant = "hero", onSubmitted }: { variant?: "hero" | "foot
   const [income, setIncome] = useState("Salary");
   const [loading, setLoading] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || mobile.trim().length < 10) {
       toast.error("Naam aur valid mobile number daalein");
       return;
     }
+    if (variant !== "exit" && !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("mobile", mobile);
+      if (variant !== "exit") {
+        formData.append("email", email.trim());
+        formData.append("service", service);
+      }
+      if (variant === "footer") {
+        formData.append("years", years);
+        formData.append("income", income);
+      }
+      formData.append("_subject", `New ITR Lead: ${variant}`);
+      formData.append("_template", "table");
+      formData.append(
+        "_autoresponse",
+        `Hi ${name.trim()}, thanks for contacting CA Praveen Jain & Team for ITR Filing. We have received your request and will contact you shortly.`
+      );
+
+      const response = await fetch(LEAD_FORM_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit form.");
+      }
+
+      toast.success("Submitted successfully. We'll contact you shortly.");
       onSubmitted?.();
       navigate("/thank-you");
-    }, 600);
+    } catch (error) {
+      console.error(error);
+      toast.error("Submission failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,7 +96,7 @@ const QuickForm = ({ variant = "hero", onSubmitted }: { variant?: "hero" | "foot
         inputMode="numeric"
         className="h-12 bg-white text-foreground"
       />
-      {variant === "footer" && (
+      {variant !== "exit" && (
         <Input
           placeholder="Email"
           type="email"
@@ -114,6 +157,7 @@ const QuickForm = ({ variant = "hero", onSubmitted }: { variant?: "hero" | "foot
 const Index = () => {
   const [exitOpen, setExitOpen] = useState(false);
   const [shown, setShown] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState(false);
 
   useEffect(() => {
     const onLeave = (e: MouseEvent) => {
@@ -144,8 +188,8 @@ const Index = () => {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-border">
         <div className="container flex items-center justify-between h-16">
           <img src={logo} alt="Praveen J & Associates Chartered Accountants Mumbai" className="h-10 sm:h-12 object-contain" />
-          <a href="tel:+919999999999" className="hidden sm:inline-flex items-center gap-2 text-primary font-bold">
-            <Phone className="w-4 h-4" /> +91 99999 99999
+          <a href="tel:++918169887643" className="hidden sm:inline-flex items-center gap-2 text-primary font-bold">
+            <Phone className="w-4 h-4" /> +91 8169887643
           </a>
           <Button onClick={scrollToForm} size="sm" className="bg-primary hover:bg-primary-dark sm:hidden">File Now</Button>
         </div>
@@ -157,18 +201,44 @@ const Index = () => {
         <div className="container relative py-8 lg:py-14 grid lg:grid-cols-2 gap-8 items-center">
           {/* Left: Video / Founder */}
           <div className="animate-slide-up">
-            <div className="relative rounded-2xl overflow-hidden shadow-elevated bg-black aspect-[4/5] sm:aspect-video lg:aspect-[4/5] max-w-md mx-auto">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={praveen}
-                className="w-full h-full object-cover"
-              >
-                <source src="" type="video/mp4" />
-              </video>
-              <img src={praveen} alt="CA Praveen Jain - Founder, Praveen J & Associates" className="absolute inset-0 w-full h-full object-cover" />
+            <div className={`relative rounded-2xl overflow-hidden shadow-elevated bg-black transition-all duration-500 ${playingVideo ? 'aspect-[9/12]' : 'aspect-video'} max-w-3xl max-h-[28rem] mx-auto`}>
+              {playingVideo ? (
+                <div className="absolute inset-0">
+                  <iframe
+                    title="YouTube Short: CA Praveen Jain"
+                    src="https://www.youtube.com/embed/eyAauG-Ey7A?autoplay=1&mute=1&rel=0&controls=1"
+                    className="w-full h-full rounded-2xl"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                  ></iframe>
+                  <button
+                    onClick={() => setPlayingVideo(false)}
+                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors"
+                    aria-label="Close video"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPlayingVideo(true)}
+                  className="relative block w-full h-full"
+                  aria-label="Play YouTube short"
+                >
+                  <img
+                    src={praveen}
+                    alt="CA Praveen Jain - Founder, Praveen J & Associates"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/30 transition-colors" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-white shadow-lg">
+                      <Play className="w-8 h-8" />
+                    </div>
+                  </div>
+                </button>
+              )}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                 <p className="text-white font-bold">CA Praveen Jain</p>
                 <p className="text-white/80 text-sm">Founder • 10+ Years Experience</p>
@@ -202,9 +272,9 @@ const Index = () => {
             </Card>
 
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <div className="flex items-center gap-1"><Star className="w-4 h-4 fill-warning text-warning" /> <strong>4.8</strong> Rating</div>
+              <div className="flex items-center gap-1"><Star className="w-4 h-4 fill-warning text-warning"/><Star className="w-4 h-4 fill-warning text-warning"/><Star className="w-4 h-4 fill-warning text-warning"/><Star className="w-4 h-4 fill-warning text-warning"/><Star className="w-4 h-4 fill-warning text-warning"/> <strong>5.0</strong> Rating</div>
               <span className="opacity-50">|</span>
-              <div>⭐ 300+ Clients</div>
+              <div>⭐ 1000+ Clients</div>
               <span className="opacity-50">|</span>
               <div>📍 Mumbai Based CA</div>
             </div>
@@ -443,7 +513,7 @@ const Index = () => {
           </div>
           <div>
             <h4 className="font-bold mb-2">Contact</h4>
-            <p className="opacity-80">📞 +91 99999 99999</p>
+            <p className="opacity-80">📞 +91 81698 87643</p>
             <p className="opacity-80">📧 info@praveenjassociates.com</p>
             <p className="opacity-80">📍 Mumbai, Maharashtra</p>
           </div>
@@ -480,6 +550,7 @@ const Index = () => {
       >
         <MessageCircle className="w-7 h-7" />
       </a>
+      <ScrollToTopButton/>
 
       {/* Exit popup */}
       <Dialog open={exitOpen} onOpenChange={setExitOpen}>
